@@ -1,19 +1,80 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ApplyLanding.css';
-import logoImage from '../../assets/logo.png'; 
+import logoImage from '../../assets/logo.png';
 
 /* --- ICONS --- */
-const IconArrowRight = () => ( <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg> );
-const IconCheck = () => ( <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17 4 12" /></svg> );
-const IconHome = () => ( <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg> );
-const IconDiamond = () => ( <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z" /><path d="M11 3 8 9l4 13 4-13-3-6" /><path d="M2 9h20" /></svg> );
-const IconUser = () => ( <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> );
-const IconLock = () => ( <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> );
-const IconEye = () => ( <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> );
-const IconEyeOff = () => ( <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg> );
-const IconClose = () => ( <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg> );
-const IconAlert = () => ( <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg> );
+const IconArrowRight = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 12h14" />
+    <path d="m12 5 7 7-7 7" />
+  </svg>
+);
+
+const IconCheck = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 6 9 17 4 12" />
+  </svg>
+);
+
+const IconHome = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
+
+const IconDiamond = () => (
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 3h12l4 6-10 13L2 9Z" />
+    <path d="M11 3 8 9l4 13 4-13-3-6" />
+    <path d="M2 9h20" />
+  </svg>
+);
+
+const IconUser = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const IconLock = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
+const IconEye = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const IconEyeOff = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+    <line x1="2" x2="22" y1="2" y2="22" />
+  </svg>
+);
+
+const IconClose = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 6 6 18M6 6l12 12" />
+  </svg>
+);
+
+const IconAlert = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" x2="12" y1="8" y2="12" />
+    <line x1="12" x2="12.01" y1="16" y2="16" />
+  </svg>
+);
 
 /* --- Privacy Modal (UPDATED CONTENT) --- */
 const PrivacyModal = ({ isOpen, onClose, onProceed }) => {
@@ -25,12 +86,14 @@ const PrivacyModal = ({ isOpen, onClose, onProceed }) => {
       <div className="al-modal-content">
         <div className="al-modal-header">
           <h2>Data Privacy Notice</h2>
-          <p>6R DIAMOND International Cargo Logistics Inc.</p>
+          <p>6R Diamond International Cargo Logistics Inc.</p>
         </div>
-        
+
         <div className="al-modal-body">
-          <p style={{ lineHeight: '1.6', color: '#475569', marginBottom: '24px' }}>
-            We are committed to protecting your privacy and personal data. This notice explains how we collect, use, and safeguard your information when you apply for positions at 6R DIAMOND International Cargo Logistics Inc.
+          <p style={{ lineHeight: '1.6', color: '#475569', marginBottom: '24px', textAlign: 'justify' }}>
+            We are committed to protecting your privacy and personal data. This notice explains how we 
+            collect, use, and safeguard your information when you apply for positions at 6R Diamond
+            International Cargo Logistics Inc.
           </p>
 
           <div className="al-modal-section" style={{ marginBottom: '24px' }}>
@@ -53,19 +116,19 @@ const PrivacyModal = ({ isOpen, onClose, onProceed }) => {
             </ul>
           </div>
 
-          <p style={{ marginTop: '24px', fontStyle: 'italic', fontSize: '13px', color: '#64748b', lineHeight: '1.5' }}>
+          <p style={{ marginTop: '24px', fontStyle: 'italic', fontSize: '15px', color: '#64748b', lineHeight: '1.5', textAlign: 'justify'}}>
             Your personal data will be stored securely and will only be accessed by authorized personnel. We will retain your information for the duration of the recruitment process and as required by law.
           </p>
 
-          <div 
-            className={`al-checkbox-container ${isChecked ? 'checked' : ''}`} 
+          <div
+            className={`al-checkbox-container ${isChecked ? 'checked' : ''}`}
             onClick={() => setIsChecked(!isChecked)}
             style={{ marginTop: '30px' }}
           >
             <div className="al-checkbox-box">
               {isChecked && <IconCheck />}
             </div>
-            <label style={{ cursor: 'pointer', fontSize: '14px', lineHeight: '1.4' }}>
+            <label style={{ cursor: 'pointer', fontSize: '15px', lineHeight: '1.4', textAlign: 'justify' }}>
               I have read and understood the Data Privacy Notice and consent to the collection and processing of my personal information for recruitment purposes.
             </label>
           </div>
@@ -120,8 +183,8 @@ const StatusModal = ({ isOpen, onClose }) => {
         <div className="al-modal-body">
           <div className="al-input-group">
             <label className="al-input-label"><IconUser /> Applicant Number</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={appNumber}
               onChange={(e) => {
                 setAppNumber(e.target.value);
@@ -132,12 +195,12 @@ const StatusModal = ({ isOpen, onClose }) => {
             />
             {errors.appNumber && <div className="al-error-message"><IconAlert /> {errors.appNumber}</div>}
           </div>
-          
+
           <div className="al-input-group">
             <label className="al-input-label"><IconLock /> Password</label>
             <div className="al-password-wrapper">
-              <input 
-                type={showPass ? "text" : "password"} 
+              <input
+                type={showPass ? "text" : "password"}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
@@ -152,11 +215,11 @@ const StatusModal = ({ isOpen, onClose }) => {
             </div>
             {errors.password && <div className="al-error-message"><IconAlert /> {errors.password}</div>}
           </div>
-          
+
           <div className="al-status-info-box">
             Your applicant number and password was sent to your email after submitting your application
           </div>
-          
+
           <button disabled={!appNumber.trim() || !password.trim()} className="al-btn-login-gold" onClick={handleLogin}>
             Login
           </button>
@@ -173,7 +236,7 @@ const ApplyLanding = () => {
   const navigate = useNavigate();
 
   const handleHome = () => {
-    navigate('/'); 
+    navigate('/');
   };
 
   const handleProceed = () => {
@@ -183,13 +246,13 @@ const ApplyLanding = () => {
 
   return (
     <div className="al-page-container">
-      
+
       <button className="al-home-btn" onClick={handleHome}>
         <IconHome /> Home
       </button>
 
       <div className="al-grid-layout">
-        
+
         {/* LEFT COLUMN: Main Card */}
         <div className="al-main-card">
           <h1 className="al-title">Apply Now</h1>
@@ -202,7 +265,7 @@ const ApplyLanding = () => {
               <h3 className="al-box-title">Ready to start your journey?</h3>
               <p className="al-box-desc">Fill up the application form to register and become part of our growing team.</p>
               <button className="al-btn-yellow" onClick={() => setShowPrivacy(true)}>
-                <span>Open Roles</span>
+                <span style={{ marginRight: '20px' }}>Open Roles</span>
                 <IconArrowRight />
               </button>
             </div>
@@ -227,8 +290,8 @@ const ApplyLanding = () => {
         {/* RIGHT COLUMN: Branding with Image Logo */}
         <div className="al-branding-col">
           <div className="al-glass-logo">
-             {/* THE ACTUAL LOGO IMAGE */}
-             <img src={logoImage} alt="6R Diamond International Cargo Logistics, Inc." className="al-logo-image" />
+            {/* THE ACTUAL LOGO IMAGE */}
+            <img src={logoImage} alt="6R Diamond International Cargo Logistics, Inc." className="al-logo-image" />
           </div>
           <div className="al-branding-text">
             <h3>Build Your Career With Us</h3>
@@ -237,12 +300,12 @@ const ApplyLanding = () => {
         </div>
       </div>
 
-      <PrivacyModal 
-        isOpen={showPrivacy} 
-        onClose={() => setShowPrivacy(false)} 
-        onProceed={handleProceed} 
+      <PrivacyModal
+        isOpen={showPrivacy}
+        onClose={() => setShowPrivacy(false)}
+        onProceed={handleProceed}
       />
-      
+
       <StatusModal
         isOpen={showStatus}
         onClose={() => setShowStatus(false)}

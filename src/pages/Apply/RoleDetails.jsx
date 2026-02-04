@@ -1,195 +1,208 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { rolesData } from '../../data/RolesData';
+import { useNavigate, useParams } from 'react-router-dom';
+import './ApplicationForm.css'; // Shared CSS
 
-// Component para sa Blue Checkmark Icon
-const CheckIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ minWidth: '20px', marginTop: '2px' }}>
-    <circle cx="12" cy="12" r="10" stroke="#4A90E2" strokeWidth="2" />
-    <path d="M8 12L11 15L16 9" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+/* --- ICON --- */
+const IconCheckBlue = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A90E2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
 );
 
 const RoleDetails = () => {
   const navigate = useNavigate();
-  // Kinukuha natin ang branch at roleId galing sa URL
   const { branch, roleId } = useParams();
-  
-  // Hinahanap ang details ng role sa ating database file
-  const role = rolesData[roleId];
 
-  // Capitalize branch name para maganda tignan
-  const displayBranch = branch ? branch.charAt(0).toUpperCase() + branch.slice(1) : 'Manila';
-
-  // Safety Check: Kung walang role na mahanap (o mali ang URL), bumalik sa selection
-  if (!role) {
-    return (
-      <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', flexDirection: 'column' }}>
-        <h2>Role not found</h2>
-        <button onClick={() => navigate('/apply/branch')} style={{ padding: '10px 20px', marginTop: '20px', cursor: 'pointer' }}>
-          Go Back
-        </button>
-      </div>
-    );
-  }
-
+  // --- FIX: CORRECT BACK NAVIGATION ---
   const handleBack = () => {
+    // Dati: navigate(`/apply/${branch}/position`); (MALI - Walang ganitong route sa App.jsx)
+    // Ngayon: navigate(`/apply/${branch}`); (TAMA - Ito ang route ng SelectPosition)
     navigate(`/apply/${branch}`);
   };
 
   const handleProceed = () => {
-    // Pupunta na sa Application Form (Step 3)
     navigate(`/apply/${branch}/${roleId}/form`);
   };
 
+  // --- DYNAMIC CONTENT ---
+  const getRoleContent = () => {
+    // 1. SPECIFIC CHECK FOR CORP SEC (PRIORITY)
+    if (roleId === 'corp-sec') {
+      return {
+        title: 'Corporate Secretary/Division Manager for Brokerage',
+        desc: 'Oversee brokerage division operations and manage corporate secretarial duties',
+        responsibilities: [
+          'Oversee daily operations of the brokerage division',
+          'Ensure compliance with SEC and corporate regulatory requirements',
+          'Manage and maintain corporate documents and records',
+          'Serve as liaison between the board of directors and management',
+          'Handle administrative duties for the brokerage department'
+        ],
+        qualifications: [
+          'Bachelor\'s Degree in Business, Law, or related field',
+          'Proven experience in corporate governance or brokerage management',
+          'Strong organizational and leadership skills',
+          'Excellent written and verbal communication skills'
+        ],
+        benefits: [
+          'Competitive Executive Salary',
+          'Comprehensive Health Insurance',
+          'Government Benefits',
+          'Professional Development Support'
+        ]
+      };
+    } 
+    // 2. LICENSED BROKER
+    else if (roleId === 'licensed-broker') {
+      return {
+        title: 'Licensed Customs Broker',
+        desc: 'Handle customs clearance procedures and regulatory compliance',
+        responsibilities: [
+          'Sign and process customs import/export entries and declarations',
+          'Represent the company in Bureau of Customs (BOC) transactions',
+          'Ensure accurate tariff classification and computation of duties and taxes',
+          'Advise clients on latest customs laws, regulations, and CMTA compliance'
+        ],
+        qualifications: [
+          'Valid PRC License as Customs Broker (Required)',
+          'Bachelor\'s Degree in Customs Administration',
+          'In-depth knowledge of TCCP, CMTA, and BOC procedures'
+        ],
+        benefits: [
+          'Professional License Allowance',
+          'Competitive salary',
+          'Health insurance (HMO)'
+        ]
+      };
+    } 
+    // 3. SECRETARY / OFFICE MANAGER
+    else if (roleId === 'office-manager' || roleId === 'secretary') {
+      return {
+        title: 'Secretary to the Office Manager',
+        desc: 'Provide administrative support to the Office Manager',
+        responsibilities: [
+          'Provide administrative support to the Office Manager',
+          'Manage calendars, appointments, and meetings',
+          'Prepare correspondence, reports, and presentations',
+          'Handle incoming calls and visitor inquiries',
+          'Maintain filing systems and office records',
+          'Coordinate travel arrangements and logistics'
+        ],
+        qualifications: [
+          'Bachelor\'s degree or relevant certification',
+          'Minimum 2 years of secretarial or administrative experience',
+          'Excellent written and verbal communication skills',
+          'Proficient in MS Office (Word, Excel, PowerPoint)',
+          'Strong organizational skills and attention to detail'
+        ],
+        benefits: [
+          'Competitive compensation',
+          'Health insurance coverage',
+          'Skill development programs',
+          'Supportive work environment',
+          'Leave benefits'
+        ]
+      };
+    } 
+    // 4. ADMIN STAFF
+    else if (roleId === 'admin-staff') {
+        return {
+          title: 'Administration Staff',
+          desc: 'Support administrative and operational functions',
+          responsibilities: [
+            'Provide general administrative support to the team',
+            'Process and maintain operational documents and records',
+            'Assist in data entry and database management'
+          ],
+          qualifications: [
+            'Bachelor\'s degree in any field or relevant diploma',
+            'Minimum 1 year of administrative experience',
+            'Good computer skills (MS Office, email, internet)'
+          ],
+          benefits: [
+            'Competitive starting salary',
+            'Health insurance',
+            'Training and mentorship'
+          ]
+        };
+    } 
+    // 5. DEFAULT FALLBACK
+    else {
+      return {
+        title: roleId ? roleId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Position Details',
+        desc: 'Join our growing team and contribute to our logistics operations.',
+        responsibilities: [
+          'Perform duties as assigned by the supervisor',
+          'Collaborate with team members to achieve goals',
+          'Ensure timely completion of tasks'
+        ],
+        qualifications: [
+          'College graduate or relevant experience',
+          'Strong communication skills',
+          'Willing to learn'
+        ],
+        benefits: [
+          'Competitive salary',
+          'Health insurance',
+          'Government benefits'
+        ]
+      };
+    }
+  };
+
+  const content = getRoleContent();
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#EBF4FF',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {/* Back Button */}
-      <button 
-        onClick={handleBack}
-        style={{
-          position: 'fixed',
-          top: '32px',
-          left: '32px',
-          background: 'white',
-          border: '1px solid #e2e8f0',
-          padding: '12px 24px',
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          fontWeight: '700',
-          color: '#475569',
-          cursor: 'pointer',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          zIndex: 100
-        }}
-      >
-        ← Back to Role Selection
-      </button>
-
-      {/* Main Content Card */}
-      <div style={{
-        background: 'white',
-        width: '100%',
-        maxWidth: '900px', 
-        borderRadius: '40px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.05)',
-        overflow: 'hidden',
-        position: 'relative'
-      }}>
-        
-        {/* Header & Progress Bar */}
-        <div style={{ padding: '48px 48px 24px 48px' }}>
-          
-          {/* Progress Bar Container */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
-            <div style={{ flex: 1, height: '8px', background: '#E2E8F0', borderRadius: '4px', marginRight: '20px', overflow: 'hidden' }}>
-              {/* Step 2 is 40% Width */}
-              <div style={{ width: '40%', height: '100%', background: '#FFB81C', borderRadius: '4px' }}></div>
-            </div>
-            <span style={{ fontSize: '14px', fontWeight: '600', color: '#64748b' }}>Step 2 of 5</span>
+    <div className="af-page-container">
+      {/* --- TOP NAV & PROGRESS BAR --- */}
+      <div className="af-top-nav">
+        <button className="af-back-btn" onClick={handleBack}>← Back to Role Selection</button>
+        <div className="af-progress-wrapper">
+          <div className="af-progress-header-row">
+            <span className="af-progress-text">Progress</span>
+            <span className="af-progress-step">Step 2 of 5</span>
           </div>
+          <div className="af-progress-bar">
+            {/* 40% Width for Step 2 */}
+            <div className="af-progress-fill" style={{ width: '40%' }}></div>
+          </div>
+        </div>
+      </div>
 
-          {/* Role Title */}
-          <h1 style={{ fontSize: '36px', fontWeight: 800, color: '#1A242F', margin: '0 0 16px 0', lineHeight: '1.2' }}>
-            {role.title}
-          </h1>
-          <p style={{ fontSize: '16px', color: '#64748b', marginTop: '0', lineHeight: '1.6' }}>
-            {role.description}
-          </p>
+      <div className="af-card">
+        <div className="rd-header">
+          <h1 className="af-title">{content.title}</h1>
+          <p className="af-subtitle">{content.desc}</p>
         </div>
 
-        {/* Scrollable List Sections */}
-        <div style={{ padding: '0 48px 48px 48px' }}>
-          
-          {/* Section: Key Responsibilities */}
-          {role.responsibilities && role.responsibilities.length > 0 && (
-            <div style={{ marginBottom: '32px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1A242F', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: '#FFB81C' }}>•</span> Key Responsibilities
-              </h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {role.responsibilities.map((item, index) => (
-                  <li key={index} style={{ display: 'flex', gap: '12px', marginBottom: '12px', fontSize: '15px', color: '#475569', lineHeight: '1.6' }}>
-                    <CheckIcon />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Section: Qualifications */}
-          {role.qualifications && role.qualifications.length > 0 && (
-            <div style={{ marginBottom: '32px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1A242F', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: '#FFB81C' }}>•</span> Qualifications
-              </h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {role.qualifications.map((item, index) => (
-                  <li key={index} style={{ display: 'flex', gap: '12px', marginBottom: '12px', fontSize: '15px', color: '#475569', lineHeight: '1.6' }}>
-                    <CheckIcon />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Section: Benefits */}
-          {role.benefits && role.benefits.length > 0 && (
-            <div style={{ marginBottom: '48px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1A242F', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: '#FFB81C' }}>•</span> Benefits & Perks
-              </h3>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                {role.benefits.map((item, index) => (
-                  <li key={index} style={{ display: 'flex', gap: '12px', marginBottom: '12px', fontSize: '15px', color: '#475569', lineHeight: '1.6' }}>
-                    <CheckIcon />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Footer Button */}
-          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '32px' }}>
-            <button 
-              onClick={handleProceed}
-              style={{
-                backgroundColor: '#FFB81C',
-                color: '#1A242F',
-                fontSize: '16px',
-                fontWeight: 800,
-                padding: '18px 32px',
-                borderRadius: '12px',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                width: '100%',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e6a518'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FFB81C'}
-            >
-              Proceed to Application Form <span>→</span>
-            </button>
-          </div>
-
+        <div className="rd-section">
+          <h3 className="af-section-title"><span className="af-dot">•</span> Key Responsibilities</h3>
+          <ul className="rd-list">
+            {content.responsibilities.map((item, i) => (
+              <li key={i}><div className="rd-icon"><IconCheckBlue /></div> <span>{item}</span></li>
+            ))}
+          </ul>
         </div>
+
+        <div className="rd-section">
+          <h3 className="af-section-title"><span className="af-dot">•</span> Qualifications</h3>
+          <ul className="rd-list">
+            {content.qualifications.map((item, i) => (
+              <li key={i}><div className="rd-icon"><IconCheckBlue /></div> <span>{item}</span></li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rd-section">
+          <h3 className="af-section-title"><span className="af-dot">•</span> Benefits & Perks</h3>
+          <ul className="rd-list">
+            {content.benefits.map((item, i) => (
+              <li key={i}><div className="rd-icon"><IconCheckBlue /></div> <span>{item}</span></li>
+            ))}
+          </ul>
+        </div>
+
+        <button className="af-next-btn" onClick={handleProceed}>
+          Proceed to Application Form →
+        </button>
       </div>
     </div>
   );

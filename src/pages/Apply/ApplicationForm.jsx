@@ -10,12 +10,13 @@ const IconCheckCircle = () => ( <svg width="24" height="24" viewBox="0 0 24 24" 
 const IconCalendar = () => ( <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A90E2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> );
 const IconChevronLeft = () => ( <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> );
 const IconChevronRight = () => ( <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg> );
+const IconWarning = () => ( <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> );
 
-/* --- CUSTOM DATE PICKER (WITH YEAR SELECTION) --- */
+/* --- CUSTOM DATE PICKER --- */
 const CustomDatePicker = ({ value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [viewDate, setViewDate] = useState(new Date()); // Tracks current view
-  const [viewMode, setViewMode] = useState('days'); // 'days' or 'years'
+  const [viewDate, setViewDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState('days');
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -42,13 +43,11 @@ const CustomDatePicker = ({ value, onChange }) => {
 
   const handleYearClick = (year) => {
     setViewDate(new Date(year, viewDate.getMonth(), 1));
-    setViewMode('days'); // Go back to days view after selecting year
+    setViewMode('days');
   };
 
-  const changeMonth = (offset) => {
-    setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1));
-  };
-
+  const changeMonth = (offset) => { setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + offset, 1)); };
+  
   const getDaysArray = () => {
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
@@ -60,9 +59,8 @@ const CustomDatePicker = ({ value, onChange }) => {
     return days;
   };
 
-  // Generate years from 1950 to current year + 1
   const getYearsArray = () => {
-    const currentYear = new Date().getFullYear() + 1;
+    const currentYear = new Date().getFullYear();
     const years = [];
     for (let y = currentYear; y >= 1950; y--) years.push(y);
     return years;
@@ -82,7 +80,7 @@ const CustomDatePicker = ({ value, onChange }) => {
             {viewMode === 'days' && <button className="cdp-nav-btn" onClick={() => changeMonth(-1)}><IconChevronLeft /></button>}
             <div className="cdp-title" onClick={() => setViewMode(viewMode === 'days' ? 'years' : 'days')}>
               {viewMode === 'days' ? `${months[viewDate.getMonth()]} ${viewDate.getFullYear()}` : 'Select Year'}
-              {viewMode === 'days' && <span className="cdp-toggle-hint"> (Click to change year)</span>}
+              {viewMode === 'days' && <span className="cdp-toggle-hint"> (Click to change)</span>}
             </div>
             {viewMode === 'days' && <button className="cdp-nav-btn" onClick={() => changeMonth(1)}><IconChevronRight /></button>}
           </div>
@@ -110,23 +108,34 @@ const CustomDatePicker = ({ value, onChange }) => {
   );
 };
 
-/* --- MAIN COMPONENT --- */
+/* --- MAIN FORM COMPONENT --- */
 const ApplicationForm = () => {
   const navigate = useNavigate();
   const { branch, roleId } = useParams();
   
   const [currentStep, setCurrentStep] = useState(3);
   const [showSample, setShowSample] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   const resumeInputRef = useRef(null);
   const coverInputRef = useRef(null);
+  const prcInputRef = useRef(null); 
+
+  const isBrokerRole = roleId ? roleId.toLowerCase().includes('broker') : false;
 
   const [formData, setFormData] = useState({
     firstName: '', lastName: '', middleInitial: '', suffix: '',
     nationality: '', birthday: '', age: '', email: '', contactNumber: '',
     region: '', province: '', city: '', barangay: '', detailedAddress: '',
-    resume: null, coverLetter: null, medicalCondition: null 
+    resume: null, coverLetter: null, prcId: null, medicalCondition: null 
   });
 
+  // Validation States
+  const [ageError, setAgeError] = useState(false);
+  const [contactError, setContactError] = useState(false);
+
+  // Age Calculation & Validation (18-59)
   useEffect(() => {
     if (formData.birthday) {
       const birthDate = new Date(formData.birthday);
@@ -134,24 +143,109 @@ const ApplicationForm = () => {
       let age = today.getFullYear() - birthDate.getFullYear();
       const m = today.getMonth() - birthDate.getMonth();
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+      
       setFormData(prev => ({ ...prev, age: age >= 0 ? age : '' }));
+
+      // VALIDATE AGE
+      if (age < 18 || age > 59) {
+        setAgeError(true);
+      } else {
+        setAgeError(false);
+      }
     }
   }, [formData.birthday]);
 
+  // Handle Input Changes with Special Logic for Contact Number
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'contactNumber') {
+      // 1. Allow only numeric input
+      // 2. Limit to 11 characters
+      const numericValue = value.replace(/\D/g, ''); 
+      if (numericValue.length <= 11) {
+        setFormData(prev => ({ ...prev, [name]: numericValue }));
+        
+        // Real-time validation check (optional, but sets visual state)
+        // Check if starts with 0 and length is 11
+        if (numericValue.length > 0 && (!numericValue.startsWith('0') || numericValue.length !== 11)) {
+           // We can set error state here or just on submit. 
+           // Let's rely on submit validation for the Popup, but clear error if corrected.
+           if (numericValue.length === 11 && numericValue.startsWith('0')) {
+             setContactError(false);
+           }
+        }
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
-  const handleFileClick = (ref) => ref.current.click();
+  const handleFileClick = (ref) => {
+    if (ref.current && !ref.current.disabled) ref.current.click();
+  };
+
   const handleFileChange = (e, fieldName) => {
     const file = e.target.files[0];
     if (file) setFormData(prev => ({ ...prev, [fieldName]: file }));
   };
 
+  // --- VALIDATION LOGIC ---
+  const validateStep3 = () => {
+    const required = ['firstName', 'lastName', 'nationality', 'birthday', 'age', 'email', 'contactNumber', 'region', 'province', 'city', 'barangay', 'detailedAddress'];
+    let missing = false;
+    
+    // Check missing fields
+    for (let field of required) {
+      if (!formData[field] || formData[field].toString().trim() === '') missing = true;
+    }
+
+    // Check Contact Number Format: Must start with '0' and be 11 digits
+    let invalidContact = false;
+    if (!formData.contactNumber.startsWith('0') || formData.contactNumber.length !== 11) {
+      invalidContact = true;
+      setContactError(true); // Trigger red border
+    } else {
+      setContactError(false);
+    }
+
+    return { missing, invalidContact }; 
+  };
+
+  const validateStep4 = () => {
+    if (!formData.resume) return true;
+    if (formData.medicalCondition === null) return true;
+    if (isBrokerRole && !formData.prcId) return true;
+    return false; // false means NO errors
+  };
+
   const handleNext = () => {
-    if (currentStep === 3) { setCurrentStep(4); window.scrollTo(0, 0); }
-    else { navigate(`/apply/${branch}/${roleId}/review`); }
+    if (currentStep === 3) {
+      const { missing, invalidContact } = validateStep3();
+      
+      let errors = [];
+      if (missing) errors.push("Fill in all required fields.");
+      if (ageError) errors.push("Age must be between 18 and 59.");
+      if (invalidContact) errors.push("Contact number must start with 0 and be 11 digits.");
+
+      if (errors.length > 0) {
+        setErrorMessage(errors.join(" "));
+        setShowError(true);
+      } else {
+        // All Good
+        setCurrentStep(4);
+        window.scrollTo(0, 0);
+      }
+    } else {
+      // Step 4
+      if (validateStep4()) {
+        setErrorMessage("Please upload all required documents and complete the medical declaration.");
+        setShowError(true);
+      } else {
+        console.log("Submitting:", formData);
+        navigate(`/apply/${branch}/${roleId}/review`);
+      }
+    }
   };
 
   const handleBack = () => {
@@ -164,7 +258,10 @@ const ApplicationForm = () => {
       <div className="af-top-nav">
         <button className="af-back-btn" onClick={handleBack}>← Back</button>
         <div className="af-progress-wrapper">
-          <div className="af-progress-label">Step {currentStep} of 5</div>
+          <div className="af-progress-header-row">
+            <span className="af-progress-text">Progress</span>
+            <span className="af-progress-step">Step {currentStep} of 5</span>
+          </div>
           <div className="af-progress-bar"><div className="af-progress-fill" style={{ width: currentStep === 3 ? '60%' : '80%' }}></div></div>
         </div>
       </div>
@@ -192,11 +289,31 @@ const ApplicationForm = () => {
                 <label className="af-label">Birthday <span className="req">*</span></label>
                 <CustomDatePicker value={formData.birthday} onChange={handleChange} />
               </div>
-              <div className="af-group"><label className="af-label">Age <span className="req">*</span></label><input type="text" className="af-input disabled" value={formData.age} placeholder="Auto-calculated" readOnly /></div>
+              <div className="af-group">
+                <label className="af-label">Age <span className="req">*</span></label>
+                <input 
+                  type="text" 
+                  className={`af-input disabled ${ageError ? 'input-error' : ''}`} 
+                  value={ageError && formData.age ? "Invalid Age" : formData.age} 
+                  placeholder="Auto-calculated" 
+                  readOnly 
+                />
+              </div>
               <div className="af-group"><label className="af-label">Email Address <span className="req">*</span></label><input type="email" name="email" className="af-input" placeholder="e.g., juan.delacruz@email.com" value={formData.email} onChange={handleChange} /></div>
-              <div className="af-group full-width-mobile"><label className="af-label">Contact Number <span className="req">*</span></label><input type="text" name="contactNumber" className="af-input" placeholder="e.g., 09171234567" value={formData.contactNumber} onChange={handleChange} /></div>
+              
+              {/* CONTACT NUMBER WITH VALIDATION */}
+              <div className="af-group full-width-mobile">
+                <label className="af-label">Contact Number <span className="req">*</span></label>
+                <input 
+                  type="text" 
+                  name="contactNumber" 
+                  className={`af-input ${contactError ? 'input-error' : ''}`}
+                  placeholder="e.g., 09171234567" 
+                  value={formData.contactNumber} 
+                  onChange={handleChange} 
+                />
+              </div>
             </div>
-
             <h3 className="af-section-title"><span className="af-dot">•</span> Address</h3>
             <div className="af-grid">
               <div className="af-group"><label className="af-label">Region <span className="req">*</span></label><input type="text" name="region" className="af-input" placeholder="e.g., NCR" value={formData.region} onChange={handleChange} /></div>
@@ -213,6 +330,8 @@ const ApplicationForm = () => {
         {currentStep === 4 && (
           <div className="af-step-content fade-in">
             <h3 className="af-section-title"><span className="af-dot">•</span> Required Documents</h3>
+            
+            {/* Resume */}
             <div className="af-upload-section">
               <label className="af-label">Resume/CV (PDF format) <span className="req">*</span></label>
               <input type="file" ref={resumeInputRef} style={{ display: 'none' }} accept=".pdf" onChange={(e) => handleFileChange(e, 'resume')} />
@@ -221,14 +340,28 @@ const ApplicationForm = () => {
               </div>
               <div className="af-note-box"><p><strong>Note:</strong> Make sure to add your 2x2 recent photo (taken within 6 months) in your resume</p><p><strong>File name format:</strong> FirstName_LastName_Resume.pdf</p></div>
             </div>
+
+            {/* PRC ID Logic */}
             <div className="af-upload-section">
-              <label className="af-label">Cover Letter (Optional - PDF format)</label>
+              <label className="af-label">
+                PRC ID (Front & Back - PDF/Image) 
+                {isBrokerRole ? <span className="req"> *</span> : <span className="af-optional-text"> (For Licensed Customs Broker role only)</span>}
+              </label>
+              <input type="file" ref={prcInputRef} style={{ display: 'none' }} accept=".pdf,.jpg,.png" disabled={!isBrokerRole} onChange={(e) => handleFileChange(e, 'prcId')} />
+              <div className={`af-upload-box ${formData.prcId ? 'uploaded' : ''} ${!isBrokerRole ? 'disabled' : ''}`} onClick={() => handleFileClick(prcInputRef)}>
+                {formData.prcId ? ( <><IconCheckCircle /><span className="af-file-name">{formData.prcId.name}</span></> ) : ( <><IconUpload /><span>{isBrokerRole ? "Click to upload PRC ID (Front & Back)" : "Not applicable for this position"}</span></> )}
+              </div>
+            </div>
+
+            <div className="af-upload-section">
+              <label className="af-label">Cover Letter (Optional)</label>
               <input type="file" ref={coverInputRef} style={{ display: 'none' }} accept=".pdf" onChange={(e) => handleFileChange(e, 'coverLetter')} />
               <div className={`af-upload-box ${formData.coverLetter ? 'uploaded' : ''}`} onClick={() => handleFileClick(coverInputRef)}>
                 {formData.coverLetter ? <><IconCheckCircle /><span className="af-file-name">{formData.coverLetter.name}</span></> : <><IconUpload /><span>Click to upload cover letter (optional)</span></>}
               </div>
               <div className="af-note-box"><p><strong>File name format:</strong> FirstName_LastName_CoverLetter.pdf</p></div>
             </div>
+
             <h3 className="af-section-title" style={{marginTop: '40px'}}><span className="af-dot">•</span> Medical Condition Declaration</h3>
             <p className="af-med-question">Do you have any medical condition that may affect your work performance? <span className="req">*</span></p>
             <div className="af-med-options">
@@ -240,18 +373,28 @@ const ApplicationForm = () => {
         )}
       </div>
 
-      {/* SAMPLE MODAL (EXACT COPY OF PROTOTYPE) */}
+      {/* ERROR MODAL */}
+      {showError && (
+        <div className="af-modal-overlay">
+          <div className="af-error-content fade-in">
+            <div className="af-error-icon-bg"><IconWarning /></div>
+            <h2 className="af-error-title">Submission Error</h2>
+            <p className="af-error-desc">{errorMessage}</p>
+            <button className="af-error-btn" onClick={() => setShowError(false)}>OK</button>
+          </div>
+        </div>
+      )}
+
+      {/* SAMPLE MODAL */}
       {showSample && (
         <div className="af-modal-overlay">
           <div className="af-modal-content">
             <button className="af-modal-close" onClick={() => setShowSample(false)}><IconClose /></button>
-            
             {currentStep === 3 ? (
               <>
                 <h2 className="af-modal-title">Sample Personal Information</h2>
                 <p className="af-modal-subtitle">Use this as a guide to fill out your application correctly</p>
                 <div className="af-modal-scroll">
-                  {/* Personal Info Section (BLUE) */}
                   <div className="af-sample-section af-sample-section-blue">
                     <h4 className="af-sample-header" style={{color: '#1A242F'}}>• Personal Information</h4>
                     <div className="af-grid sample-grid">
@@ -265,8 +408,6 @@ const ApplicationForm = () => {
                       <div className="af-sample-field"><label>Contact Number</label><div className="af-input sample">09171234567</div></div>
                     </div>
                   </div>
-                  
-                  {/* Address Section (GREEN) */}
                   <div className="af-sample-section af-sample-section-green">
                     <h4 className="af-sample-header" style={{color: '#15803d'}}>• Address</h4>
                     <div className="af-grid sample-grid">
@@ -284,27 +425,16 @@ const ApplicationForm = () => {
                 <h2 className="af-modal-title">Sample Documents & Medical Declaration</h2>
                 <p className="af-modal-subtitle">Use this as a guide to fill out your application correctly</p>
                 <div className="af-modal-scroll">
-                  {/* Required Documents (YELLOW) */}
                   <div className="af-sample-section af-sample-section-yellow">
                     <h4 className="af-sample-header" style={{color: '#1A242F'}}>• Required Documents</h4>
-                    <div className="af-sample-field">
-                      <label>Resume/CV (PDF format)</label>
-                      <div className="af-input sample file-look"><IconFile /> Juan_DelaCruz_Resume.pdf</div>
-                    </div>
-                    <div className="af-sample-field">
-                      <label>Cover Letter (Optional - PDF format)</label>
-                      <div className="af-input sample file-look"><IconFile /> Juan_DelaCruz_CoverLetter.pdf</div>
-                    </div>
+                    <div className="af-sample-field"><label>Resume/CV (PDF format)</label><div className="af-input sample file-look"><IconFile /> Juan_DelaCruz_Resume.pdf</div></div>
+                    <div className="af-sample-field"><label>PRC ID (Front & Back) <span style={{fontSize:'10px', color:'#64748b'}}>(For Licensed Customs Broker only)</span></label><div className="af-input sample file-look"><IconFile /> Juan_DelaCruz_PRCID.pdf</div></div>
+                    <div className="af-sample-field"><label>Cover Letter (Optional - PDF format)</label><div className="af-input sample file-look"><IconFile /> Juan_DelaCruz_CoverLetter.pdf</div></div>
                   </div>
-
-                  {/* Medical Declaration (PURPLE) */}
                   <div className="af-sample-section af-sample-section-purple">
                     <h4 className="af-sample-header" style={{color: '#1A242F'}}>• Medical Condition Declaration</h4>
                     <p style={{fontSize: '13px', color: '#475569', marginBottom: '8px'}}>Do you have any medical condition that may affect your work performance?</p>
-                    <div className="af-med-sample-row">
-                      <div className="af-med-radio"><span>○</span> Yes</div>
-                      <div className="af-med-radio selected"><span>●</span> No</div>
-                    </div>
+                    <div className="af-med-sample-row"><div className="af-med-radio"><span>○</span> Yes</div><div className="af-med-radio selected"><span>●</span> No</div></div>
                     <p style={{fontSize: '11px', fontStyle: 'italic', color: '#64748b', marginTop: '8px'}}>* If "Yes", please specify your condition in the text box that will appear</p>
                   </div>
                 </div>

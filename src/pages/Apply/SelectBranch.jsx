@@ -1,62 +1,62 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './SelectBranch.css'; // Make sure the CSS file is in the same folder
+import './SelectBranch.css'; // Sisiguraduhin nating ito ang gamit na CSS
 
-// Pin Icon Component
-const PinIcon = () => (
-  <svg 
-    className="sb-icon-wrapper" 
-    viewBox="0 0 24 24" 
-    fill="currentColor"
-    width="32" 
-    height="32"
-  >
-    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-  </svg>
-);
+/* --- ICONS --- */
+const IconMapPin = () => ( <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> );
+const IconArrowRight = () => ( <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg> );
+
+const BRANCHES = [
+  { id: 'manila', label: 'Manila', active: true },
+  { id: 'cebu', label: 'Cebu', active: true },
+  { id: 'davao', label: 'Davao', active: true },
+];
 
 const SelectBranch = () => {
   const navigate = useNavigate();
-  const [selectedBranch, setSelectedBranch] = useState(null);
+  const [selected, setSelected] = useState(null);
 
-  const branches = ['Cebu', 'Davao', 'Manila'];
+  const handleBack = () => {
+    navigate('/apply'); // Bumalik sa Landing Page
+  };
 
   const handleNext = () => {
-    if (selectedBranch) {
-      // Navigate to the dynamic URL (e.g. /apply/manila)
-      navigate(`/apply/${selectedBranch.toLowerCase()}`);
+    if (selected) {
+      // Dito papasok sa Select Position with specific branch (e.g., /apply/manila)
+      navigate(`/apply/${selected}`);
     }
   };
 
   return (
     <div className="sb-page-container">
-      <button className="sb-back-btn" onClick={() => navigate('/apply')}>
-        ← Back
-      </button>
+      {/* Back Button */}
+      <button className="sb-back-btn" onClick={handleBack}>← Back</button>
 
       <div className="sb-card">
         <h1 className="sb-title">Select Branch</h1>
-        <p className="sb-subtitle">Choose the branch location where you'd like to apply</p>
+        <p className="sb-subtitle">Choose the branch you want to apply for</p>
 
+        {/* Branch Options */}
         <div className="sb-grid">
-          {branches.map((branch) => (
-            <div
-              key={branch}
-              className={`sb-option ${selectedBranch === branch ? 'selected' : ''}`}
-              onClick={() => setSelectedBranch(branch)}
+          {BRANCHES.map((branch) => (
+            <div 
+              key={branch.id} 
+              className={`sb-option ${selected === branch.id ? 'selected' : ''}`}
+              onClick={() => setSelected(branch.id)}
             >
-              <PinIcon />
-              <span className="sb-label">{branch}</span>
+              <div className="sb-icon-wrapper"><IconMapPin /></div>
+              <span className="sb-label">{branch.label}</span>
             </div>
           ))}
         </div>
 
+        {/* Proceed Button */}
         <button 
           className="sb-next-btn" 
+          disabled={!selected}
           onClick={handleNext}
-          disabled={!selectedBranch}
         >
-          Next: Select Role →
+          Next <IconArrowRight />
         </button>
       </div>
     </div>
