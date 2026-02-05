@@ -576,7 +576,7 @@
 /* Responsive Fix */
 @media (max-width: 768px) {
   .footer-columns {
-    flex-direction: column;
+    flex-direction: column;     
     text-align: center;
   }
   .footer-text, .footer-contact-details p {

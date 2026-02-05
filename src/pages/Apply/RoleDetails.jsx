@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import './ApplicationForm.css'; // Shared CSS
 
-/* --- ICON --- */
 const IconCheckBlue = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A90E2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
 );
@@ -11,10 +10,7 @@ const RoleDetails = () => {
   const navigate = useNavigate();
   const { branch, roleId } = useParams();
 
-  // --- FIX: CORRECT BACK NAVIGATION ---
   const handleBack = () => {
-    // Dati: navigate(`/apply/${branch}/position`); (MALI - Walang ganitong route sa App.jsx)
-    // Ngayon: navigate(`/apply/${branch}`); (TAMA - Ito ang route ng SelectPosition)
     navigate(`/apply/${branch}`);
   };
 
@@ -22,9 +18,7 @@ const RoleDetails = () => {
     navigate(`/apply/${branch}/${roleId}/form`);
   };
 
-  // --- DYNAMIC CONTENT ---
   const getRoleContent = () => {
-    // 1. SPECIFIC CHECK FOR CORP SEC (PRIORITY)
     if (roleId === 'corp-sec') {
       return {
         title: 'Corporate Secretary/Division Manager for Brokerage',
@@ -49,9 +43,7 @@ const RoleDetails = () => {
           'Professional Development Support'
         ]
       };
-    } 
-    // 2. LICENSED BROKER
-    else if (roleId === 'licensed-broker') {
+    } else if (roleId === 'licensed-broker') {
       return {
         title: 'Licensed Customs Broker',
         desc: 'Handle customs clearance procedures and regulatory compliance',
@@ -72,9 +64,7 @@ const RoleDetails = () => {
           'Health insurance (HMO)'
         ]
       };
-    } 
-    // 3. SECRETARY / OFFICE MANAGER
-    else if (roleId === 'office-manager' || roleId === 'secretary') {
+    } else if (roleId === 'office-manager' || roleId === 'secretary') {
       return {
         title: 'Secretary to the Office Manager',
         desc: 'Provide administrative support to the Office Manager',
@@ -101,9 +91,7 @@ const RoleDetails = () => {
           'Leave benefits'
         ]
       };
-    } 
-    // 4. ADMIN STAFF
-    else if (roleId === 'admin-staff') {
+    } else if (roleId === 'admin-staff') {
         return {
           title: 'Administration Staff',
           desc: 'Support administrative and operational functions',
@@ -123,27 +111,13 @@ const RoleDetails = () => {
             'Training and mentorship'
           ]
         };
-    } 
-    // 5. DEFAULT FALLBACK
-    else {
+    } else {
       return {
         title: roleId ? roleId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Position Details',
         desc: 'Join our growing team and contribute to our logistics operations.',
-        responsibilities: [
-          'Perform duties as assigned by the supervisor',
-          'Collaborate with team members to achieve goals',
-          'Ensure timely completion of tasks'
-        ],
-        qualifications: [
-          'College graduate or relevant experience',
-          'Strong communication skills',
-          'Willing to learn'
-        ],
-        benefits: [
-          'Competitive salary',
-          'Health insurance',
-          'Government benefits'
-        ]
+        responsibilities: ['Perform duties as assigned', 'Collaborate with team'],
+        qualifications: ['Relevant experience', 'Good communication skills'],
+        benefits: ['Competitive salary', 'Health insurance']
       };
     }
   };
@@ -152,7 +126,6 @@ const RoleDetails = () => {
 
   return (
     <div className="af-page-container">
-      {/* --- TOP NAV & PROGRESS BAR --- */}
       <div className="af-top-nav">
         <button className="af-back-btn" onClick={handleBack}>← Back to Role Selection</button>
         <div className="af-progress-wrapper">
@@ -161,7 +134,6 @@ const RoleDetails = () => {
             <span className="af-progress-step">Step 2 of 5</span>
           </div>
           <div className="af-progress-bar">
-            {/* 40% Width for Step 2 */}
             <div className="af-progress-fill" style={{ width: '40%' }}></div>
           </div>
         </div>

@@ -113,7 +113,11 @@ const ApplicationForm = () => {
   const navigate = useNavigate();
   const { branch, roleId } = useParams();
   
-  const [currentStep, setCurrentStep] = useState(3);
+  const [currentStep, setCurrentStep] = useState(() => {
+    const savedStep = localStorage.getItem('formStep');
+    return savedStep ? parseInt(savedStep) : 3;
+  });
+
   const [showSample, setShowSample] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -128,14 +132,34 @@ const ApplicationForm = () => {
     firstName: '', lastName: '', middleInitial: '', suffix: '',
     nationality: '', birthday: '', age: '', email: '', contactNumber: '',
     region: '', province: '', city: '', barangay: '', detailedAddress: '',
-    resume: null, coverLetter: null, prcId: null, medicalCondition: null 
+    resume: null, coverLetter: null, prcId: null, medicalCondition: null, medicalDetails: ''
   });
 
-  // Validation States
   const [ageError, setAgeError] = useState(false);
   const [contactError, setContactError] = useState(false);
 
-  // Age Calculation & Validation (18-59)
+  // UPDATED REGIONS WITH FULL ABBREVIATIONS
+  const regions = [
+    "NCR - National Capital Region",
+    "CAR - Cordillera Administrative Region",
+    "Region I - Ilocos Region",
+    "Region II - Cagayan Valley",
+    "Region III - Central Luzon",
+    "Region IV-A - CALABARZON",
+    "MIMAROPA Region",
+    "Region V - Bicol Region",
+    "Region VI - Western Visayas",
+    "Region VII - Central Visayas",
+    "Region VIII - Eastern Visayas",
+    "NIR - Negros Island Region",
+    "Region IX - Zamboanga Peninsula",
+    "Region X - Northern Mindanao",
+    "Region XI - Davao Region",
+    "Region XII - SOCCSKSARGEN",
+    "Region XIII - Caraga",
+    "BARMM - Bangsamoro Autonomous Region in Muslim Mindanao"
+  ];
+
   useEffect(() => {
     if (formData.birthday) {
       const birthDate = new Date(formData.birthday);
@@ -146,7 +170,6 @@ const ApplicationForm = () => {
       
       setFormData(prev => ({ ...prev, age: age >= 0 ? age : '' }));
 
-      // VALIDATE AGE
       if (age < 18 || age > 59) {
         setAgeError(true);
       } else {
@@ -155,26 +178,13 @@ const ApplicationForm = () => {
     }
   }, [formData.birthday]);
 
-  // Handle Input Changes with Special Logic for Contact Number
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     if (name === 'contactNumber') {
-      // 1. Allow only numeric input
-      // 2. Limit to 11 characters
       const numericValue = value.replace(/\D/g, ''); 
       if (numericValue.length <= 11) {
         setFormData(prev => ({ ...prev, [name]: numericValue }));
-        
-        // Real-time validation check (optional, but sets visual state)
-        // Check if starts with 0 and length is 11
-        if (numericValue.length > 0 && (!numericValue.startsWith('0') || numericValue.length !== 11)) {
-           // We can set error state here or just on submit. 
-           // Let's rely on submit validation for the Popup, but clear error if corrected.
-           if (numericValue.length === 11 && numericValue.startsWith('0')) {
-             setContactError(false);
-           }
-        }
+        if (numericValue.length === 11 && numericValue.startsWith('0')) setContactError(false);
       }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -190,66 +200,61 @@ const ApplicationForm = () => {
     if (file) setFormData(prev => ({ ...prev, [fieldName]: file }));
   };
 
-  // --- VALIDATION LOGIC ---
   const validateStep3 = () => {
     const required = ['firstName', 'lastName', 'nationality', 'birthday', 'age', 'email', 'contactNumber', 'region', 'province', 'city', 'barangay', 'detailedAddress'];
     let missing = false;
-    
-    // Check missing fields
     for (let field of required) {
       if (!formData[field] || formData[field].toString().trim() === '') missing = true;
     }
-
-    // Check Contact Number Format: Must start with '0' and be 11 digits
     let invalidContact = false;
     if (!formData.contactNumber.startsWith('0') || formData.contactNumber.length !== 11) {
       invalidContact = true;
-      setContactError(true); // Trigger red border
+      setContactError(true);
     } else {
       setContactError(false);
     }
-
     return { missing, invalidContact }; 
   };
 
   const validateStep4 = () => {
     if (!formData.resume) return true;
     if (formData.medicalCondition === null) return true;
+    if (formData.medicalCondition === 'yes' && !formData.medicalDetails.trim()) return true;
     if (isBrokerRole && !formData.prcId) return true;
-    return false; // false means NO errors
+    return false;
   };
 
   const handleNext = () => {
     if (currentStep === 3) {
       const { missing, invalidContact } = validateStep3();
-      
       let errors = [];
       if (missing) errors.push("Fill in all required fields.");
       if (ageError) errors.push("Age must be between 18 and 59.");
       if (invalidContact) errors.push("Contact number must start with 0 and be 11 digits.");
-
       if (errors.length > 0) {
         setErrorMessage(errors.join(" "));
         setShowError(true);
       } else {
-        // All Good
         setCurrentStep(4);
+        localStorage.setItem('formStep', '4');
         window.scrollTo(0, 0);
       }
     } else {
-      // Step 4
       if (validateStep4()) {
         setErrorMessage("Please upload all required documents and complete the medical declaration.");
         setShowError(true);
       } else {
-        console.log("Submitting:", formData);
-        navigate(`/apply/${branch}/${roleId}/review`);
+        localStorage.removeItem('formStep');
+        navigate(`/apply/${branch}/${roleId}/review`, { state: formData });
       }
     }
   };
 
   const handleBack = () => {
-    if (currentStep === 4) setCurrentStep(3);
+    if (currentStep === 4) {
+        setCurrentStep(3);
+        localStorage.setItem('formStep', '3');
+    }
     else navigate(`/apply/${branch}/${roleId}`);
   };
 
@@ -275,7 +280,6 @@ const ApplicationForm = () => {
           <button className="af-sample-btn" onClick={() => setShowSample(true)}>Sample Form</button>
         </div>
 
-        {/* STEP 3 */}
         {currentStep === 3 && (
           <div className="af-step-content fade-in">
             <h3 className="af-section-title"><span className="af-dot">•</span> Personal Information</h3>
@@ -291,32 +295,23 @@ const ApplicationForm = () => {
               </div>
               <div className="af-group">
                 <label className="af-label">Age <span className="req">*</span></label>
-                <input 
-                  type="text" 
-                  className={`af-input disabled ${ageError ? 'input-error' : ''}`} 
-                  value={ageError && formData.age ? "Invalid Age" : formData.age} 
-                  placeholder="Auto-calculated" 
-                  readOnly 
-                />
+                <input type="text" className={`af-input disabled ${ageError ? 'input-error' : ''}`} value={ageError && formData.age ? "Invalid Age" : formData.age} placeholder="Auto-calculated" readOnly />
               </div>
               <div className="af-group"><label className="af-label">Email Address <span className="req">*</span></label><input type="email" name="email" className="af-input" placeholder="e.g., juan.delacruz@email.com" value={formData.email} onChange={handleChange} /></div>
-              
-              {/* CONTACT NUMBER WITH VALIDATION */}
               <div className="af-group full-width-mobile">
                 <label className="af-label">Contact Number <span className="req">*</span></label>
-                <input 
-                  type="text" 
-                  name="contactNumber" 
-                  className={`af-input ${contactError ? 'input-error' : ''}`}
-                  placeholder="e.g., 09171234567" 
-                  value={formData.contactNumber} 
-                  onChange={handleChange} 
-                />
+                <input type="text" name="contactNumber" className={`af-input ${contactError ? 'input-error' : ''}`} placeholder="e.g., 09171234567" value={formData.contactNumber} onChange={handleChange} />
               </div>
             </div>
             <h3 className="af-section-title"><span className="af-dot">•</span> Address</h3>
             <div className="af-grid">
-              <div className="af-group"><label className="af-label">Region <span className="req">*</span></label><input type="text" name="region" className="af-input" placeholder="e.g., NCR" value={formData.region} onChange={handleChange} /></div>
+              <div className="af-group">
+                <label className="af-label">Region <span className="req">*</span></label>
+                <select name="region" className="af-input" value={formData.region} onChange={handleChange}>
+                    <option value="">Select Region</option>
+                    {regions.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
               <div className="af-group"><label className="af-label">Province <span className="req">*</span></label><input type="text" name="province" className="af-input" placeholder="e.g., Metro Manila" value={formData.province} onChange={handleChange} /></div>
               <div className="af-group"><label className="af-label">City/Municipality <span className="req">*</span></label><input type="text" name="city" className="af-input" placeholder="e.g., Quezon City" value={formData.city} onChange={handleChange} /></div>
               <div className="af-group"><label className="af-label">Barangay <span className="req">*</span></label><input type="text" name="barangay" className="af-input" placeholder="e.g., Commonwealth" value={formData.barangay} onChange={handleChange} /></div>
@@ -326,12 +321,9 @@ const ApplicationForm = () => {
           </div>
         )}
 
-        {/* STEP 4 */}
         {currentStep === 4 && (
           <div className="af-step-content fade-in">
             <h3 className="af-section-title"><span className="af-dot">•</span> Required Documents</h3>
-            
-            {/* Resume */}
             <div className="af-upload-section">
               <label className="af-label">Resume/CV (PDF format) <span className="req">*</span></label>
               <input type="file" ref={resumeInputRef} style={{ display: 'none' }} accept=".pdf" onChange={(e) => handleFileChange(e, 'resume')} />
@@ -340,8 +332,6 @@ const ApplicationForm = () => {
               </div>
               <div className="af-note-box"><p><strong>Note:</strong> Make sure to add your 2x2 recent photo (taken within 6 months) in your resume</p><p><strong>File name format:</strong> FirstName_LastName_Resume.pdf</p></div>
             </div>
-
-            {/* PRC ID Logic */}
             <div className="af-upload-section">
               <label className="af-label">
                 PRC ID (Front & Back - PDF/Image) 
@@ -352,7 +342,6 @@ const ApplicationForm = () => {
                 {formData.prcId ? ( <><IconCheckCircle /><span className="af-file-name">{formData.prcId.name}</span></> ) : ( <><IconUpload /><span>{isBrokerRole ? "Click to upload PRC ID (Front & Back)" : "Not applicable for this position"}</span></> )}
               </div>
             </div>
-
             <div className="af-upload-section">
               <label className="af-label">Cover Letter (Optional)</label>
               <input type="file" ref={coverInputRef} style={{ display: 'none' }} accept=".pdf" onChange={(e) => handleFileChange(e, 'coverLetter')} />
@@ -361,19 +350,32 @@ const ApplicationForm = () => {
               </div>
               <div className="af-note-box"><p><strong>File name format:</strong> FirstName_LastName_CoverLetter.pdf</p></div>
             </div>
-
+            
             <h3 className="af-section-title" style={{marginTop: '40px'}}><span className="af-dot">•</span> Medical Condition Declaration</h3>
             <p className="af-med-question">Do you have any medical condition that may affect your work performance? <span className="req">*</span></p>
             <div className="af-med-options">
               <div className={`af-med-option ${formData.medicalCondition === 'yes' ? 'selected' : ''}`} onClick={() => setFormData({...formData, medicalCondition: 'yes'})}>Yes</div>
               <div className={`af-med-option ${formData.medicalCondition === 'no' ? 'selected' : ''}`} onClick={() => setFormData({...formData, medicalCondition: 'no'})}>No</div>
             </div>
+
+            {formData.medicalCondition === 'yes' && (
+              <div className="af-med-details-area fade-in">
+                <label className="af-label">Please specify your condition</label>
+                <textarea 
+                  name="medicalDetails" 
+                  className="af-textarea" 
+                  placeholder="Describe your medical condition and how it might affect your work..."
+                  value={formData.medicalDetails}
+                  onChange={handleChange}
+                ></textarea>
+              </div>
+            )}
+
             <button className="af-next-btn" onClick={handleNext}>Next: Review & Submit →</button>
           </div>
         )}
       </div>
 
-      {/* ERROR MODAL */}
       {showError && (
         <div className="af-modal-overlay">
           <div className="af-error-content fade-in">
@@ -385,61 +387,49 @@ const ApplicationForm = () => {
         </div>
       )}
 
-      {/* SAMPLE MODAL */}
       {showSample && (
         <div className="af-modal-overlay">
           <div className="af-modal-content">
             <button className="af-modal-close" onClick={() => setShowSample(false)}><IconClose /></button>
-            {currentStep === 3 ? (
-              <>
-                <h2 className="af-modal-title">Sample Personal Information</h2>
-                <p className="af-modal-subtitle">Use this as a guide to fill out your application correctly</p>
-                <div className="af-modal-scroll">
-                  <div className="af-sample-section af-sample-section-blue">
+            <h2 className="af-modal-title">Sample Complete Application</h2>
+            <p className="af-modal-subtitle">Use this as a guide to fill out your application correctly</p>
+            <div className="af-modal-scroll">
+                <div className="af-sample-section af-sample-section-blue">
                     <h4 className="af-sample-header" style={{color: '#1A242F'}}>• Personal Information</h4>
                     <div className="af-grid sample-grid">
-                      <div className="af-sample-field"><label>First Name</label><div className="af-input sample">Juan</div></div>
-                      <div className="af-sample-field"><label>Last Name</label><div className="af-input sample">Dela Cruz</div></div>
-                      <div className="af-sample-field"><label>Middle Initial</label><div className="af-input sample">P</div></div>
-                      <div className="af-sample-field"><label>Nationality</label><div className="af-input sample">Filipino</div></div>
-                      <div className="af-sample-field"><label>Birthday</label><div className="af-input sample">01/15/1995</div></div>
-                      <div className="af-sample-field"><label>Age</label><div className="af-input sample">30</div></div>
-                      <div className="af-sample-field"><label>Email Address</label><div className="af-input sample">juan.delacruz@email.com</div></div>
-                      <div className="af-sample-field"><label>Contact Number</label><div className="af-input sample">09171234567</div></div>
+                        <div className="af-sample-field"><label>First Name</label><div className="af-input sample">Juan</div></div>
+                        <div className="af-sample-field"><label>Last Name</label><div className="af-input sample">Dela Cruz</div></div>
+                        <div className="af-sample-field"><label>Middle Initial</label><div className="af-input sample">P</div></div>
+                        <div className="af-sample-field"><label>Nationality</label><div className="af-input sample">Filipino</div></div>
+                        <div className="af-sample-field"><label>Birthday</label><div className="af-input sample">01/15/1995</div></div>
+                        <div className="af-sample-field"><label>Age</label><div className="af-input sample">30</div></div>
+                        <div className="af-sample-field"><label>Email Address</label><div className="af-input sample">juan.delacruz@email.com</div></div>
+                        <div className="af-sample-field"><label>Contact Number</label><div className="af-input sample">09171234567</div></div>
                     </div>
-                  </div>
-                  <div className="af-sample-section af-sample-section-green">
+                </div>
+                <div className="af-sample-section af-sample-section-green">
                     <h4 className="af-sample-header" style={{color: '#15803d'}}>• Address</h4>
                     <div className="af-grid sample-grid">
-                      <div className="af-sample-field"><label>Region</label><div className="af-input sample">NCR - National Capital Region</div></div>
-                      <div className="af-sample-field"><label>Province</label><div className="af-input sample">Metro Manila</div></div>
-                      <div className="af-sample-field"><label>City/Municipality</label><div className="af-input sample">Quezon City</div></div>
-                      <div className="af-sample-field"><label>Barangay</label><div className="af-input sample">Commonwealth</div></div>
-                      <div className="af-sample-field full-width"><label>Detailed Address (House No., Street, Subdivision)</label><div className="af-input sample">123 Sampaguita Street, Villa Esperanza Subdivision</div></div>
+                        <div className="af-sample-field"><label>Region</label><div className="af-input sample">NCR - National Capital Region</div></div>
+                        <div className="af-sample-field"><label>Province</label><div className="af-input sample">Metro Manila</div></div>
+                        <div className="af-sample-field"><label>City/Municipality</label><div className="af-input sample">Quezon City</div></div>
+                        <div className="af-sample-field"><label>Barangay</label><div className="af-input sample">Commonwealth</div></div>
+                        <div className="af-sample-field full-width"><label>Detailed Address (House No., Street, Subdivision)</label><div className="af-input sample">123 Sampaguita Street, Villa Esperanza Subdivision</div></div>
                     </div>
-                  </div>
                 </div>
-              </>
-            ) : (
-              <>
-                <h2 className="af-modal-title">Sample Documents & Medical Declaration</h2>
-                <p className="af-modal-subtitle">Use this as a guide to fill out your application correctly</p>
-                <div className="af-modal-scroll">
-                  <div className="af-sample-section af-sample-section-yellow">
+                <div className="af-sample-section af-sample-section-yellow">
                     <h4 className="af-sample-header" style={{color: '#1A242F'}}>• Required Documents</h4>
                     <div className="af-sample-field"><label>Resume/CV (PDF format)</label><div className="af-input sample file-look"><IconFile /> Juan_DelaCruz_Resume.pdf</div></div>
-                    <div className="af-sample-field"><label>PRC ID (Front & Back) <span style={{fontSize:'10px', color:'#64748b'}}>(For Licensed Customs Broker only)</span></label><div className="af-input sample file-look"><IconFile /> Juan_DelaCruz_PRCID.pdf</div></div>
+                    <div className="af-sample-field"><label>PRC ID (Front & Back - PDF/Image)</label><div className="af-input sample file-look"><IconFile /> Juan_DelaCruz_PRCID.pdf</div></div>
                     <div className="af-sample-field"><label>Cover Letter (Optional - PDF format)</label><div className="af-input sample file-look"><IconFile /> Juan_DelaCruz_CoverLetter.pdf</div></div>
-                  </div>
-                  <div className="af-sample-section af-sample-section-purple">
+                </div>
+                <div className="af-sample-section af-sample-section-purple">
                     <h4 className="af-sample-header" style={{color: '#1A242F'}}>• Medical Condition Declaration</h4>
                     <p style={{fontSize: '13px', color: '#475569', marginBottom: '8px'}}>Do you have any medical condition that may affect your work performance?</p>
                     <div className="af-med-sample-row"><div className="af-med-radio"><span>○</span> Yes</div><div className="af-med-radio selected"><span>●</span> No</div></div>
                     <p style={{fontSize: '11px', fontStyle: 'italic', color: '#64748b', marginTop: '8px'}}>* If "Yes", please specify your condition in the text box that will appear</p>
-                  </div>
                 </div>
-              </>
-            )}
+            </div>
             <div className="af-modal-footer"><strong>Note:</strong> Make sure all information is accurate and complete before submitting your application.</div>
           </div>
         </div>
